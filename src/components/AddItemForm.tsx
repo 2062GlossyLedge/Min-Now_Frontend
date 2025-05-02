@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface AddItemFormProps {
@@ -13,6 +13,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
     const [pictureEmoji, setPictureEmoji] = useState('')
     const [itemType, setItemType] = useState('Clothing')
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [csrfToken, setCsrfToken] = useState('')
 
     const itemTypes = [
         'Clothing',
@@ -22,16 +23,42 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
         'Other'
     ]
 
+    useEffect(() => {
+        // Fetch CSRF token from backend endpoint
+        const fetchCsrfToken = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
+                    credentials: 'include',
+                })
+                if (response.ok) {
+                    const data = await response.json()
+                    console.log('CSRF Token:', data)
+                    setCsrfToken(data.token)
+                    console.log('CSRF Token:', csrfToken)
+                } else {
+                    console.error('Failed to fetch CSRF token')
+                }
+            } catch (error) {
+                console.error('Error fetching CSRF token:', error)
+            }
+        }
+
+        fetchCsrfToken()
+    }, [])
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
 
         try {
-            const response = await fetch('/api/items', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/items`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    'X-CSRFToken': csrfToken,
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     name,
                     picture_url: pictureEmoji,
@@ -43,6 +70,8 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
             if (response.ok) {
                 router.refresh()
                 onClose()
+            } else {
+                throw new Error(`HTTP error! status: ${response.status}`)
             }
         } catch (error) {
             console.error('Error adding item:', error)

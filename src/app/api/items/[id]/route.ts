@@ -32,4 +32,43 @@ export async function PATCH(
             { status: 500 }
         )
     }
+}
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json()
+
+        // Forward the request to your Django backend
+        const response = await fetch('http://localhost:8000/api/items/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        })
+
+        const data = await response.json()
+        return NextResponse.json(data)
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to create item' },
+            { status: 500 }
+        )
+    }
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const status = searchParams.get('status')
+
+        const response = await fetch(`http://localhost:8000/api/items/?status=${status}`)
+        const data = await response.json()
+        return NextResponse.json(data)
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to fetch items' },
+            { status: 500 }
+        )
+    }
 } 

@@ -28,9 +28,11 @@ export default function KeepView() {
             try {
                 const response = await fetch('/api/items?status=Keep')
                 const data = await response.json()
-                setItems(data)
+                console.log('API Response:', data)
+                setItems(Array.isArray(data) ? data : [])
             } catch (error) {
                 console.error('Error fetching items:', error)
+                setItems([])
             } finally {
                 setLoading(false)
             }
@@ -62,8 +64,8 @@ export default function KeepView() {
     }
 
     const filteredItems = selectedType
-        ? items.filter((item) => item.itemType === selectedType)
-        : items
+        ? items?.filter((item) => item.itemType === selectedType) || []
+        : items || []
 
     if (loading) {
         return (
@@ -95,7 +97,7 @@ export default function KeepView() {
 
             <FilterBar onFilterChange={handleFilterChange} />
 
-            {filteredItems.length === 0 ? (
+            {!Array.isArray(filteredItems) || filteredItems.length === 0 ? (
                 <p className="text-gray-500">No items to keep at the moment.</p>
             ) : (
                 <div className="space-y-4">
