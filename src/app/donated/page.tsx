@@ -2,27 +2,42 @@
 
 import { useState, useEffect } from 'react'
 import ItemCard from '../../components/ItemCard'
-
-interface Item {
-    id: string
-    name: string
-    pictureUrl: string
-    itemType: string
-    status: string
-    ownershipDuration: string
-    lastUsedDuration: string
-}
+import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
+import { Item } from '@/types/item'
 
 export default function DonatedView() {
     const [items, setItems] = useState<Item[]>([])
     const [loading, setLoading] = useState(true)
+    const [csrfToken, setCsrfToken] = useState('')
+
+    useEffect(() => {
+        const fetchCsrfToken = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
+                    credentials: 'include',
+                })
+                if (response.ok) {
+                    const data = await response.json()
+                    setCsrfToken(data.token)
+                }
+            } catch (error) {
+                console.error('Error fetching CSRF token:', error)
+            }
+        }
+
+        fetchCsrfToken()
+    }, [])
 
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const response = await fetch('/api/items?status=Donate')
-                const data = await response.json()
-                setItems(data)
+                const { data, error } = await fetchItemsByStatus('Donate')
+                if (error) {
+                    console.error(error)
+                    setItems([])
+                } else {
+                    setItems(data || [])
+                }
             } catch (error) {
                 console.error('Error fetching items:', error)
             } finally {
@@ -32,6 +47,40 @@ export default function DonatedView() {
 
         fetchItems()
     }, [])
+
+    const handleEdit = async (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }) => {
+        const { data: updatedItem, error } = await updateItem(id, updates)
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (updatedItem) {
+            // Update the item in place while maintaining the list order
+            setItems(prevItems =>
+                prevItems.map(item =>
+                    item.id === id ? { ...item, ...updatedItem } : item
+                )
+            )
+        }
+    }
+
+    const handleDelete = async (id: string) => {
+        const { error } = await deleteItem(id)
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        setItems(prevItems => prevItems.filter(item => item.id !== id))
+    }
+
+    const handleStatusChange = (id: string, newStatus: string) => {
+        console.log('Changing status for item:', id, 'to:', newStatus);
+        // TODO: Implement API call to update status
+    }
 
     if (loading) {
         return (
@@ -51,7 +100,16 @@ export default function DonatedView() {
                     {items.map((item) => (
                         <ItemCard
                             key={item.id}
-                            {...item}
+                            id={item.id}
+                            name={item.name}
+                            pictureUrl={item.pictureUrl}
+                            itemType={item.itemType}
+                            status={item.status}
+                            ownershipDuration={item.ownershipDuration}
+                            lastUsedDuration={item.lastUsedDuration}
+                            onStatusChange={handleStatusChange}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
                         />
                     ))}
                 </div>
