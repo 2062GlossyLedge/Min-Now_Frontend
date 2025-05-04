@@ -1,23 +1,23 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    output: 'export', // Outputs a Single-Page Application (SPA).
-    distDir: './dist', // Changes the build output directory to `./dist/`.
+// const nextConfig = {
+//     distDir: './dist', // Changes the build output directory to `./dist/`.
+// }
+
+
+// to see build time speed up whe working with large code repo. 
+// Cehcks errors instead using github actions
+
+/** @type {import("next").NextConfig} */
+const config = {
+    images: {
+        remotePatterns: [{ hostname: "utfs.io" }],
+    },
+    typescript: {
+        ignoreBuildErrors: true,
+    },
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
 }
 
-
-// Test to see build time speed up whe working with large code repo
-
-// /** @type {import("next").NextConfig} */
-// const coreConfig = {
-//     images: {
-//         remotePatterns: [{ hostname: "utfs.io" }],
-//     },
-//     typescript: {
-//         ignoreBuildErrors: true,
-//     },
-//     eslint: {
-//         ignoreDuringBuilds: true,
-//     },
-
-
-export default nextConfig
+export default config
