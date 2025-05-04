@@ -17,7 +17,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                         onClick={toggleTheme}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${theme === 'dark' ? 'bg-indigo-600' : 'bg-gray-200'
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${theme === 'dark' ? 'bg-teal-400' : 'bg-gray-200'
                             }`}
                     >
                         <span

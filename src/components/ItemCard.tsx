@@ -32,58 +32,81 @@ export default function ItemCard({
     }
 
     return (
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 mb-4">
+        <div
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-4 mb-4 cursor-pointer group"
+        >
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{pictureUrl}</span>
+                    <span className="text-2xl group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{pictureUrl}</span>
                     <div>
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{name}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{itemType}</p>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{name}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{itemType}</p>
                     </div>
                 </div>
                 <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsExpanded(!isExpanded);
+                    }}
+                    className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors"
                 >
-                    {isExpanded ? '−' : '+'}
+                    {isExpanded ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    )}
                 </button>
             </div>
 
             {isExpanded && (
                 <div className="mt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Owned for:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{ownershipDuration}</span>
+                        <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Owned for:</span>
+                        <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{ownershipDuration}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Last used:</span>
-                        <span className="text-gray-900 dark:text-gray-100">{lastUsedDuration}</span>
+                        <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Last used:</span>
+                        <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{lastUsedDuration}</span>
                     </div>
                     {onStatusChange && (
                         <div className="flex space-x-2 mt-4">
                             <button
-                                onClick={() => handleStatusChange('Keep')}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange('Keep');
+                                }}
                                 className={`px-3 py-1 rounded ${status === 'Keep'
                                     ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
                                     }`}
                             >
                                 Keep
                             </button>
                             <button
-                                onClick={() => handleStatusChange('Give')}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange('Give');
+                                }}
                                 className={`px-3 py-1 rounded ${status === 'Give'
                                     ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
                                     }`}
                             >
                                 Give
                             </button>
                             <button
-                                onClick={() => handleStatusChange('Donate')}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange('Donate');
+                                }}
                                 className={`px-3 py-1 rounded ${status === 'Donate'
                                     ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
                                     }`}
                             >
                                 Donate

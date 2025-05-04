@@ -26,8 +26,8 @@ export default function HomePage() {
                                         key={tab.name}
                                         href={tab.href}
                                         className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === tab.href
-                                            ? 'border-indigo-500 text-gray-900 dark:text-gray-100'
-                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-200'
+                                            ? 'border-teal-500 text-gray-900 dark:text-gray-100'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-teal-300 dark:hover:border-teal-600 hover:text-teal-500 dark:hover:text-teal-400'
                                             }`}
                                     >
                                         <span className="mr-2">{tab.icon}</span>
@@ -39,7 +39,7 @@ export default function HomePage() {
                         <div className="flex items-center space-x-4">
                             <Link
                                 href="/settings"
-                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                                className="text-gray-500 dark:text-gray-400 hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
