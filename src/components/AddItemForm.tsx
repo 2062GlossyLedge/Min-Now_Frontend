@@ -19,7 +19,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
     const [itemType, setItemType] = useState('Clothing')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [csrfToken, setCsrfToken] = useState('')
-    const [receivedDate, setReceivedDate] = useState<Date | undefined>(new Date())
+    const [receivedDate, setReceivedDate] = useState<Date | undefined>(undefined)
 
     const itemTypes = [
         'Clothing',
@@ -38,9 +38,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
                 })
                 if (response.ok) {
                     const data = await response.json()
-                    console.log('CSRF Token:', data)
                     setCsrfToken(data.token)
-                    console.log('CSRF Token:', csrfToken)
                 } else {
                     console.error('Failed to fetch CSRF token')
                 }
@@ -56,7 +54,22 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
         e.preventDefault()
         setIsSubmitting(true)
 
+        if (!receivedDate) {
+            console.error('Received date is required')
+            setIsSubmitting(false)
+            return
+        }
+
         try {
+            // Create a new date object in local timezone and set time to start of day
+            const localDate = new Date(receivedDate)
+            localDate.setHours(0, 0, 0, 0)
+
+            console.log('Original selected date:', receivedDate)
+            console.log('Local timezone offset (minutes):', receivedDate.getTimezoneOffset())
+            console.log('Adjusted local date:', localDate)
+            console.log('ISO string being sent:', localDate.toISOString())
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/items`, {
                 method: 'POST',
                 headers: {
@@ -70,15 +83,19 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
                     picture_url: pictureEmoji,
                     item_type: itemType,
                     status: 'Keep',
-                    item_received_date: receivedDate?.toISOString()
+                    item_received_date: localDate.toISOString(),
+                    last_used: localDate.toISOString() // Set last_used to same date
                 }),
             })
 
             if (response.ok) {
+                const responseData = await response.json()
+                console.log('Backend response:', responseData)
                 router.refresh()
                 onClose()
             } else {
-                throw new Error(`HTTP error! status: ${response.status}`)
+                const errorData = await response.json()
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || 'Unknown error'}`)
             }
         } catch (error) {
             console.error('Error adding item:', error)
@@ -130,7 +147,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Received</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Received Date</label>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
@@ -162,7 +179,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
                         </button>
                         <button
                             type="submit"
-                            disabled={isSubmitting || !name || !pictureEmoji}
+                            disabled={isSubmitting || !name || !pictureEmoji || !receivedDate}
                             className="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 disabled:opacity-50"
                         >
                             {isSubmitting ? 'Adding...' : 'Add Item'}

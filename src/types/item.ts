@@ -8,4 +8,10 @@ export interface Item {
     lastUsedDuration: string
     item_received_date?: string
     last_used?: string
+    ownership_duration?: {
+        years: number
+        months: number
+        days: number
+        description: string
+    }
 } 

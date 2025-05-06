@@ -73,7 +73,14 @@ export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<It
     try {
         const response = await fetchWithCsrf(`/api/items?status=${status}`)
         const data = await response.json()
-        return { data }
+
+        // Use the backend's ownership_duration description
+        const itemsWithDuration = data.map((item: Item) => ({
+            ...item,
+            ownershipDuration: item.ownership_duration?.description || 'Not specified'
+        }))
+
+        return { data: itemsWithDuration }
     } catch (error) {
         console.error('Error fetching items:', error)
         return { error: 'Failed to fetch items' }
