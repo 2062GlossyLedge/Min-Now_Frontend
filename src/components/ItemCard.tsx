@@ -16,7 +16,7 @@ interface ItemCardProps {
     ownershipDuration: string
     lastUsedDuration: string
     onStatusChange?: (id: string, newStatus: string) => void
-    onEdit?: (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }) => void
+    onEdit?: (id: string, updates: { name?: string, receivedDate?: Date }) => void
     onDelete?: (id: string) => void
 }
 
@@ -35,8 +35,7 @@ export default function ItemCard({
     const [isExpanded, setIsExpanded] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [editedName, setEditedName] = useState(name)
-    const [ownershipDate, setOwnershipDate] = useState<Date | undefined>(new Date())
-    const [lastUsedDate, setLastUsedDate] = useState<Date | undefined>(new Date())
+    const [receivedDate, setReceivedDate] = useState<Date | undefined>(new Date())
 
     const handleStatusChange = (newStatus: string) => {
         if (onStatusChange) {
@@ -48,8 +47,7 @@ export default function ItemCard({
         if (onEdit) {
             onEdit(id, {
                 name: editedName,
-                ownershipDate,
-                lastUsedDate
+                receivedDate
             })
         }
         setIsEditing(false)
@@ -134,7 +132,7 @@ export default function ItemCard({
             {(isExpanded || isEditing) && (
                 <div className="mt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Owned for:</span>
+                        <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Ownership Duration:</span>
                         {isEditing ? (
                             <Popover>
                                 <PopoverTrigger asChild>
@@ -143,14 +141,14 @@ export default function ItemCard({
                                         className="w-[240px] justify-start text-left font-normal"
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {ownershipDate ? format(ownershipDate, "PPP") : <span>Pick a date</span>}
+                                        {receivedDate ? format(receivedDate, "PPP") : <span>Pick a date</span>}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800" align="start">
                                     <Calendar
                                         mode="single"
-                                        selected={ownershipDate}
-                                        onSelect={setOwnershipDate}
+                                        selected={receivedDate}
+                                        onSelect={setReceivedDate}
                                         initialFocus
                                     />
                                 </PopoverContent>
@@ -159,86 +157,8 @@ export default function ItemCard({
                             <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{ownershipDuration}</span>
                         )}
                     </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Last used:</span>
-                        {isEditing ? (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        className="w-[240px] justify-start text-left font-normal"
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {lastUsedDate ? format(lastUsedDate, "PPP") : <span>Pick a date</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={lastUsedDate}
-                                        onSelect={setLastUsedDate}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        ) : (
-                            <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{lastUsedDuration}</span>
-                        )}
-                    </div>
                     {isEditing && (
                         <div className="mt-4 space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Owned for:</span>
-                                {isEditing ? (
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className="w-[240px] justify-start text-left font-normal"
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {ownershipDate ? format(ownershipDate, "PPP") : <span>Pick a date</span>}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={ownershipDate}
-                                                onSelect={setOwnershipDate}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                ) : (
-                                    <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{ownershipDuration}</span>
-                                )}
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Last used:</span>
-                                {isEditing ? (
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className="w-[240px] justify-start text-left font-normal"
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {lastUsedDate ? format(lastUsedDate, "PPP") : <span>Pick a date</span>}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={lastUsedDate}
-                                                onSelect={setLastUsedDate}
-                                                initialFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                ) : (
-                                    <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{lastUsedDuration}</span>
-                                )}
-                            </div>
                             <div className="flex justify-between items-center mt-4">
                                 <div className="flex space-x-2">
                                     <button
