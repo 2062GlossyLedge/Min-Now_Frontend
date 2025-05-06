@@ -186,60 +186,114 @@ export default function ItemCard({
                         )}
                     </div>
                     {isEditing && (
-                        <div className="flex justify-end space-x-4 mt-4">
-                            <Button
-                                variant="outline"
-                                onClick={handleCancel}
-                                className="text-gray-700 dark:text-gray-300 px-4 py-2"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleSave}
-                                className="bg-teal-600 text-white hover:bg-teal-700 px-4 py-2"
-                            >
-                                Save
-                            </Button>
-                        </div>
-                    )}
-                    {!isEditing && onStatusChange && (
-                        <div className="flex space-x-2 mt-4">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange('Keep');
-                                }}
-                                className={`px-3 py-1 rounded ${status === 'Keep'
-                                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
-                                    }`}
-                            >
-                                Keep
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange('Give');
-                                }}
-                                className={`px-3 py-1 rounded ${status === 'Give'
-                                    ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
-                                    }`}
-                            >
-                                Give
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleStatusChange('Donate');
-                                }}
-                                className={`px-3 py-1 rounded ${status === 'Donate'
-                                    ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
-                                    }`}
-                            >
-                                Donate
-                            </button>
+                        <div className="mt-4 space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Owned for:</span>
+                                {isEditing ? (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="w-[240px] justify-start text-left font-normal"
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {ownershipDate ? format(ownershipDate, "PPP") : <span>Pick a date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={ownershipDate}
+                                                onSelect={setOwnershipDate}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                ) : (
+                                    <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{ownershipDuration}</span>
+                                )}
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-500 dark:text-gray-400 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">Last used:</span>
+                                {isEditing ? (
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="w-[240px] justify-start text-left font-normal"
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {lastUsedDate ? format(lastUsedDate, "PPP") : <span>Pick a date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={lastUsedDate}
+                                                onSelect={setLastUsedDate}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                ) : (
+                                    <span className="text-gray-900 dark:text-gray-100 group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">{lastUsedDuration}</span>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleStatusChange('Keep');
+                                        }}
+                                        className={`px-3 py-1 rounded ${status === 'Keep'
+                                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
+                                            }`}
+                                    >
+                                        Keep
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleStatusChange('Give');
+                                        }}
+                                        className={`px-3 py-1 rounded ${status === 'Give'
+                                            ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
+                                            }`}
+                                    >
+                                        Give
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleStatusChange('Donate');
+                                        }}
+                                        className={`px-3 py-1 rounded ${status === 'Donate'
+                                            ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300'
+                                            }`}
+                                    >
+                                        Donate
+                                    </button>
+                                </div>
+                                <div className="flex space-x-4">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleCancel}
+                                        className="text-gray-700 dark:text-gray-300 px-4 py-2"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleSave}
+                                        className="bg-teal-600 text-white hover:bg-teal-700 px-4 py-2"
+                                    >
+                                        Save
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

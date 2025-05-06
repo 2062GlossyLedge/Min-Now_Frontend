@@ -77,9 +77,20 @@ export default function DonatedView() {
         setItems(prevItems => prevItems.filter(item => item.id !== id))
     }
 
-    const handleStatusChange = (id: string, newStatus: string) => {
-        console.log('Changing status for item:', id, 'to:', newStatus);
-        // TODO: Implement API call to update status
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        const { data: updatedItem, error } = await updateItem(id, { status: newStatus })
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (updatedItem) {
+            // Remove the item from the current view if its status has changed
+            if (updatedItem.status !== 'Donate') {
+                setItems(items.filter((item) => item.id !== id))
+            }
+        }
     }
 
     if (loading) {

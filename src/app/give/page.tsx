@@ -53,20 +53,18 @@ export default function GiveView() {
     }, [])
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-        try {
-            const response = await fetch(`/api/items/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: newStatus }),
-            })
+        const { data: updatedItem, error } = await updateItem(id, { status: newStatus })
 
-            if (response.ok) {
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (updatedItem) {
+            // Remove the item from the current view if its status has changed
+            if (updatedItem.status !== 'Give') {
                 setItems(items.filter((item) => item.id !== id))
             }
-        } catch (error) {
-            console.error('Error updating item status:', error)
         }
     }
 

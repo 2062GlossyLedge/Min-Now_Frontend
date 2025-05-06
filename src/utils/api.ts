@@ -33,7 +33,12 @@ export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
     return response
 }
 
-export const updateItem = async (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }): Promise<ApiResponse<Item>> => {
+export const updateItem = async (id: string, updates: {
+    name?: string,
+    ownershipDate?: Date,
+    lastUsedDate?: Date,
+    status?: string
+}): Promise<ApiResponse<Item>> => {
     try {
         const response = await fetchWithCsrf(`/api/items/${id}`, {
             method: 'PUT',
@@ -41,6 +46,7 @@ export const updateItem = async (id: string, updates: { name?: string, ownership
                 name: updates.name,
                 item_received_date: updates.ownershipDate?.toISOString(),
                 last_used: updates.lastUsedDate?.toISOString(),
+                status: updates.status,
             }),
         })
         const data = await response.json()
