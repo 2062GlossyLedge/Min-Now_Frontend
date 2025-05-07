@@ -5,6 +5,7 @@ interface ApiResponse<T> {
     error?: string
 }
 
+// utility csrf fetching for put, post, delete reqs
 export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
     const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
 
