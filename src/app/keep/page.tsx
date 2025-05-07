@@ -5,16 +5,8 @@ import ItemCard from '../../components/ItemCard'
 import AddItemForm from '../../components/AddItemForm'
 import FilterBar from '../../components/FilterBar'
 import CheckupManager from '../../components/CheckupManager'
-
-interface Item {
-    id: string
-    name: string
-    pictureUrl: string
-    itemType: string
-    status: string
-    ownershipDuration: string
-    lastUsedDuration: string
-}
+import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
+import { Item } from '@/types/item'
 
 export default function KeepView() {
     const [items, setItems] = useState<Item[]>([])
@@ -22,14 +14,36 @@ export default function KeepView() {
     const [showAddForm, setShowAddForm] = useState(false)
     const [showCheckupManager, setShowCheckupManager] = useState(false)
     const [selectedType, setSelectedType] = useState<string | null>(null)
+    const [csrfToken, setCsrfToken] = useState('')
+
+    useEffect(() => {
+        const fetchCsrfToken = async () => {
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
+                    credentials: 'include',
+                })
+                if (response.ok) {
+                    const data = await response.json()
+                    setCsrfToken(data.token)
+                }
+            } catch (error) {
+                console.error('Error fetching CSRF token:', error)
+            }
+        }
+
+        fetchCsrfToken()
+    }, [])
 
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const response = await fetch('/api/items?status=Keep')
-                const data = await response.json()
-                console.log('API Response:', data)
-                setItems(Array.isArray(data) ? data : [])
+                const { data, error } = await fetchItemsByStatus('Keep')
+                if (error) {
+                    console.error(error)
+                    setItems([])
+                } else {
+                    setItems(Array.isArray(data) ? data : [])
+                }
             } catch (error) {
                 console.error('Error fetching items:', error)
                 setItems([])
@@ -42,25 +56,52 @@ export default function KeepView() {
     }, [])
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-        try {
-            const response = await fetch(`/api/items/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: newStatus }),
-            })
+        const { data: updatedItem, error } = await updateItem(id, { status: newStatus })
 
-            if (response.ok) {
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (updatedItem) {
+            // Remove the item from the current view if its status has changed
+            if (updatedItem.status !== 'Keep') {
                 setItems(items.filter((item) => item.id !== id))
             }
-        } catch (error) {
-            console.error('Error updating item status:', error)
         }
     }
 
     const handleFilterChange = (type: string | null) => {
         setSelectedType(type)
+    }
+
+    const handleEdit = async (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }) => {
+        const { data: updatedItem, error } = await updateItem(id, updates)
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (updatedItem) {
+            // Update the item in place while maintaining the list order
+            setItems(prevItems =>
+                prevItems.map(item =>
+                    item.id === id ? { ...item, ...updatedItem } : item
+                )
+            )
+        }
+    }
+
+    const handleDelete = async (id: string) => {
+        const { error } = await deleteItem(id)
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        setItems(prevItems => prevItems.filter(item => item.id !== id))
     }
 
     const filteredItems = selectedType
@@ -108,8 +149,16 @@ export default function KeepView() {
                     {filteredItems.map((item) => (
                         <ItemCard
                             key={item.id}
-                            {...item}
+                            id={item.id}
+                            name={item.name}
+                            pictureUrl={item.pictureUrl}
+                            itemType={item.itemType}
+                            status={item.status}
+                            ownershipDuration={item.ownershipDuration}
+                            lastUsedDuration={item.lastUsedDuration}
                             onStatusChange={handleStatusChange}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
                         />
                     ))}
                 </div>

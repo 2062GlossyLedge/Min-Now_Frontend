@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
     title: 'Min-Now',
     description: 'A minimalist approach to managing your belongings',
+    icons: {
+        icon: '/Min-NowDarkLogo.ico',
+    },
 }
 
 export default function RootLayout({

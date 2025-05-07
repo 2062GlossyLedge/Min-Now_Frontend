@@ -37,3 +37,5 @@ dist
 My App.swiftpm/
 
 backend-snippet/
+
+outsideFiles/*
