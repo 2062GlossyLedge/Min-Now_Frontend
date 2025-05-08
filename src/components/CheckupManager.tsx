@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Item } from '@/types/item'
 import { CheckCircle2 } from 'lucide-react'
-import { fetchWithCsrf, updateItem } from '@/utils/api'
+import { fetchWithCsrf, updateItem, fetchCheckup, createCheckup, completeCheckup } from '@/utils/api'
 
 interface CheckupManagerProps {
     checkupType: 'Keep' | 'Give'
@@ -19,6 +19,21 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
     const [loading, setLoading] = useState(true)
     const [showConfirmation, setShowConfirmation] = useState(false)
     const [changedItems, setChangedItems] = useState<Set<string>>(new Set())
+    const [lastCheckupDate, setLastCheckupDate] = useState<Date | null>(null)
+
+    useEffect(() => {
+        const fetchCheckupInfo = async () => {
+            try {
+                const { data, error } = await fetchCheckup(checkupType.toLowerCase())
+                if (data) {
+                    setLastCheckupDate(new Date(data.last_checkup_date))
+                }
+            } catch (error) {
+                console.error('Error fetching checkup info:', error)
+            }
+        }
+        fetchCheckupInfo()
+    }, [checkupType])
 
     useEffect(() => {
         const fetchItems = async () => {
@@ -35,9 +50,26 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
         fetchItems()
     }, [checkupType])
 
-    const handleStatusChange = async (itemId: string, newStatus: string) => {
+    const handleStatusChange = async (itemId: string, newStatus: 'used' | 'not_used' | 'donate') => {
         try {
-            const { data: updatedItem, error } = await updateItem(itemId, { status: newStatus })
+            const statusMap = {
+                'Keep': {
+                    'used': 'Keep',
+                    'not_used': 'Give'
+                } as const,
+                'Give': {
+                    'used': 'Keep',
+                    'not_used': 'Give',
+                    'donate': 'Donate'
+                } as const
+            } as const
+
+            if (checkupType === 'Keep' && newStatus === 'donate') {
+                return;
+            }
+
+            const targetStatus = (statusMap[checkupType] as Record<typeof newStatus, string>)[newStatus]
+            const { data: updatedItem, error } = await updateItem(itemId, { status: targetStatus })
 
             if (error) {
                 console.error('Error updating item status:', error)
@@ -55,24 +87,30 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
 
     const handleSubmit = async () => {
         setIsSubmitting(true)
-
         try {
-            const formattedCheckupType = checkupType.charAt(0).toUpperCase() + checkupType.slice(1).toLowerCase()
+            // First, try to get existing checkup
+            const { data: existingCheckup } = await fetchCheckup(checkupType.toLowerCase())
 
-            const response = await fetchWithCsrf('/api/checkups', {
-                method: 'POST',
-                body: JSON.stringify({
-                    checkup_type: formattedCheckupType,
+            if (existingCheckup && Array.isArray(existingCheckup) && existingCheckup.length > 0) {
+                // If checkup exists, complete it
+                await completeCheckup(existingCheckup[0].id)
+            } else {
+                // If no checkup exists, create and complete a new one
+                const { data: newCheckup, error } = await createCheckup({
+                    checkup_type: checkupType.toLowerCase(),
                     interval_months: interval
-                }),
-            })
+                })
 
-            if (!response.ok) {
-                const errorData = await response.json()
-                console.error('Error submitting checkup:', errorData)
-                throw new Error('Failed to submit checkup')
+                if (error) {
+                    throw new Error(error)
+                }
+
+                if (newCheckup) {
+                    await completeCheckup(newCheckup.id)
+                }
             }
 
+            setLastCheckupDate(new Date())
             setShowConfirmation(true)
             setTimeout(() => {
                 router.refresh()
@@ -105,9 +143,31 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                    {checkupType} Items Checkup
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {checkupType} Items Checkup
+                    </h2>
+                    <div className="relative">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 text-gray-600 dark:text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                        </svg>
+                    </div>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                    Mark items as used or not used since the last checkup. Items marked as not used will be moved to the Give section. In the Give section, you can also mark items for donation.
+                </p>
 
                 <div className="space-y-6">
                     <div>
@@ -164,24 +224,58 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <button
-                                                onClick={() => handleStatusChange(item.id, 'Keep')}
-                                                className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
-                                                    ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
-                                                    : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
-                                                    }`}
-                                            >
-                                                Keep
-                                            </button>
-                                            <button
-                                                onClick={() => handleStatusChange(item.id, 'Give')}
-                                                className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
-                                                    ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
-                                                    : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
-                                                    }`}
-                                            >
-                                                Give
-                                            </button>
+                                            {checkupType === 'Keep' ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleStatusChange(item.id, 'used')}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
+                                                            ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
+                                                            : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
+                                                            }`}
+                                                    >
+                                                        Used
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange(item.id, 'not_used')}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
+                                                            ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
+                                                            : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
+                                                            }`}
+                                                    >
+                                                        Not Used
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleStatusChange(item.id, 'used')}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
+                                                            ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
+                                                            : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
+                                                            }`}
+                                                    >
+                                                        Used
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange(item.id, 'not_used')}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
+                                                            ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
+                                                            : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
+                                                            }`}
+                                                    >
+                                                        Not Used
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange(item.id, 'donate')}
+                                                        className={`px-3 py-1 text-sm rounded transition-colors duration-200 ${changedItems.has(item.id)
+                                                            ? 'bg-teal-50 dark:bg-teal-800 text-teal-600 dark:text-teal-300'
+                                                            : 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800'
+                                                            }`}
+                                                    >
+                                                        Donate
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -199,7 +293,7 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
                         </button>
                         <button
                             onClick={handleSubmit}
-                            disabled={isSubmitting || items.length === 0}
+                            disabled={isSubmitting}
                             className="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 disabled:opacity-50"
                         >
                             {isSubmitting ? 'Saving...' : 'Complete Checkup'}

@@ -4,6 +4,18 @@ interface ApiResponse<T> {
     data?: T
     error?: string
 }
+// Add these interfaces at the top with other interfaces
+interface Checkup {
+    id: number;
+    last_checkup_date: string;
+    checkup_interval_months: number;
+    is_checkup_due: boolean;
+}
+
+interface CheckupCreate {
+    interval_months: number;
+    checkup_type: string;
+}
 
 // utility csrf fetching for put, post, delete reqs
 export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
@@ -86,4 +98,42 @@ export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<It
         console.error('Error fetching items:', error)
         return { error: 'Failed to fetch items' }
     }
-} 
+}
+
+export const fetchCheckup = async (type: string): Promise<ApiResponse<Checkup>> => {
+    try {
+        const response = await fetchWithCsrf(`/api/checkups?type=${type.toLowerCase()}`)
+        const data = await response.json()
+        return { data }
+    } catch (error) {
+        console.error('Error fetching checkup:', error)
+        return { error: 'Failed to fetch checkup' }
+    }
+}
+
+export const createCheckup = async (checkupData: CheckupCreate): Promise<ApiResponse<Checkup>> => {
+    try {
+        const response = await fetchWithCsrf('/api/checkups', {
+            method: 'POST',
+            body: JSON.stringify(checkupData),
+        })
+        const data = await response.json()
+        return { data }
+    } catch (error) {
+        console.error('Error creating checkup:', error)
+        return { error: 'Failed to create checkup' }
+    }
+}
+
+export const completeCheckup = async (checkupId: number): Promise<ApiResponse<Checkup>> => {
+    try {
+        const response = await fetchWithCsrf(`/api/checkups/${checkupId}/complete`, {
+            method: 'POST',
+        })
+        const data = await response.json()
+        return { data }
+    } catch (error) {
+        console.error('Error completing checkup:', error)
+        return { error: 'Failed to complete checkup' }
+    }
+}

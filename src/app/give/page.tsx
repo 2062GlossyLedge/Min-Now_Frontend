@@ -6,6 +6,7 @@ import FilterBar from '../../components/FilterBar'
 import CheckupManager from '../../components/CheckupManager'
 import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
 import { Item } from '@/types/item'
+import { useCheckupStatus } from '@/hooks/useCheckupStatus'
 
 export default function GiveView() {
     const [items, setItems] = useState<Item[]>([])
@@ -13,6 +14,7 @@ export default function GiveView() {
     const [showCheckupManager, setShowCheckupManager] = useState(false)
     const [selectedType, setSelectedType] = useState<string | null>(null)
     const [csrfToken, setCsrfToken] = useState('')
+    const isCheckupDue = useCheckupStatus('give')
 
     useEffect(() => {
         const fetchCsrfToken = async () => {
@@ -119,11 +121,14 @@ export default function GiveView() {
                 <h1 className="text-2xl font-bold">Items to Give Away</h1>
                 <button
                     onClick={() => setShowCheckupManager(true)}
-                    className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
+                    className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors relative"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
+                    {isCheckupDue && (
+                        <div className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full"></div>
+                    )}
                 </button>
             </div>
 
