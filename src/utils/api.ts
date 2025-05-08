@@ -87,9 +87,10 @@ export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<It
         const response = await fetchWithCsrf(`/api/items?status=${status}`)
         const data = await response.json()
 
-        // Use the backend's ownership_duration description
-        const itemsWithDuration = data.map((item: Item) => ({
+        // Map backend fields to frontend interface
+        const itemsWithDuration = data.map((item: any) => ({
             ...item,
+            itemType: item.item_type, // Map item_type to itemType
             ownershipDuration: item.ownership_duration?.description || 'Not specified'
         }))
 

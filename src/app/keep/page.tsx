@@ -17,6 +17,7 @@ export default function KeepView() {
     const [selectedType, setSelectedType] = useState<string | null>(null)
     const [csrfToken, setCsrfToken] = useState('')
     const isCheckupDue = useCheckupStatus('keep')
+    const [showFilters, setShowFilters] = useState(false)
 
     useEffect(() => {
         const fetchCsrfToken = async () => {
@@ -106,9 +107,10 @@ export default function KeepView() {
         setItems(prevItems => prevItems.filter(item => item.id !== id))
     }
 
+    // Filter items based on selected type
     const filteredItems = selectedType
-        ? items?.filter((item) => item.itemType === selectedType) || []
-        : items || []
+        ? items.filter((item) => item.itemType === selectedType)
+        : items
 
     if (loading) {
         return (
@@ -122,7 +124,7 @@ export default function KeepView() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Items to Keep</h1>
-                <div className="flex space-x-4">
+                <div className="flex space-x-2">
                     <button
                         onClick={() => setShowCheckupManager(true)}
                         className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors relative"
@@ -135,6 +137,14 @@ export default function KeepView() {
                         )}
                     </button>
                     <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                    </button>
+                    <button
                         onClick={() => setShowAddForm(true)}
                         className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
                     >
@@ -145,9 +155,9 @@ export default function KeepView() {
                 </div>
             </div>
 
-            <FilterBar onFilterChange={handleFilterChange} />
+            <FilterBar onFilterChange={handleFilterChange} showFilters={showFilters} />
 
-            {!Array.isArray(filteredItems) || filteredItems.length === 0 ? (
+            {filteredItems.length === 0 ? (
                 <p className="text-gray-500">No items to keep at the moment.</p>
             ) : (
                 <div className="space-y-4">
