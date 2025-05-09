@@ -1,76 +1,76 @@
-// import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 
-// // Is this code even used?
-// export async function PATCH(
-//     request: Request,
-//     { params }: { params: { id: string } }
-// ) {
-//     try {
-//         const { id } = params
-//         const body = await request.json()
+// Is this code even used? supposudly but where - see item checkup diffs
+export async function PATCH(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const { id } = params
+        const body = await request.json()
 
-//         const response = await fetch(`${API_BASE_URL}/api/items/${id}`, {
-//             method: 'PUT',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             credentials: 'include',
-//             body: JSON.stringify(body),
-//         })
+        const response = await fetch(`${API_BASE_URL}/api/items/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(body),
+        })
 
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`)
-//         }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
 
-//         const data = await response.json()
-//         return NextResponse.json(data)
-//     } catch (error) {
-//         console.error('Error updating item:', error)
-//         return NextResponse.json(
-//             { error: 'Failed to update item' },
-//             { status: 500 }
-//         )
-//     }
-// }
+        const data = await response.json()
+        return NextResponse.json(data)
+    } catch (error) {
+        console.error('Error updating item:', error)
+        return NextResponse.json(
+            { error: 'Failed to update item' },
+            { status: 500 }
+        )
+    }
+}
 
-// export async function POST(request: Request) {
-//     try {
-//         const body = await request.json()
+export async function POST(request: Request) {
+    try {
+        const body = await request.json()
 
-//         // Forward the request to your Django backend
-//         const response = await fetch('http://localhost:8000/api/items/', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: JSON.stringify(body),
-//         })
+        // Forward the request to your Django backend
+        const response = await fetch('http://localhost:8000/api/items/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        })
 
-//         const data = await response.json()
-//         return NextResponse.json(data)
-//     } catch (error) {
-//         return NextResponse.json(
-//             { error: 'Failed to create item' },
-//             { status: 500 }
-//         )
-//     }
-// }
+        const data = await response.json()
+        return NextResponse.json(data)
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to create item' },
+            { status: 500 }
+        )
+    }
+}
 
-// export async function GET(request: Request) {
-//     try {
-//         const { searchParams } = new URL(request.url)
-//         const status = searchParams.get('status')
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const status = searchParams.get('status')
 
-//         const response = await fetch(`http://localhost:8000/api/items/?status=${status}`)
-//         const data = await response.json()
-//         return NextResponse.json(data)
-//     } catch (error) {
-//         return NextResponse.json(
-//             { error: 'Failed to fetch items' },
-//             { status: 500 }
-//         )
-//     }
-// } 
+        const response = await fetch(`http://localhost:8000/api/items/?status=${status}`)
+        const data = await response.json()
+        return NextResponse.json(data)
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to fetch items' },
+            { status: 500 }
+        )
+    }
+} 
