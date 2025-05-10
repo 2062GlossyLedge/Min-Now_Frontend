@@ -19,31 +19,58 @@ interface CheckupCreate {
 
 // utility csrf fetching for put, post, delete reqs
 export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
-    const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
+    // First, ensure we have a CSRF token
+    try {
+        const csrfResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
+            credentials: 'include',
+        })
+        if (!csrfResponse.ok) {
+            throw new Error('Failed to get CSRF token')
+        }
+        const { token } = await csrfResponse.json()
+        console.log('CSRF Token:', token)
 
-    const defaultOptions: RequestInit = {
-        headers: {
-            'Content-Type': 'application/json',
-            'accept': 'application/json',
-            'X-CSRFToken': csrfToken,
-        },
-        credentials: 'include',
+        const defaultOptions: RequestInit = {
+            headers: {
+                'Content-Type': 'application/json',
+                'accept': 'application/json',
+                'X-CSRFToken': token,
+            },
+            credentials: 'include',
+        }
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers,
+            },
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            console.error('Response not OK:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries()),
+                body: errorText
+            })
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+        }
+
+        return response
+    } catch (error) {
+        console.error('Fetch error:', {
+            error,
+            url: `${process.env.NEXT_PUBLIC_API_URL}${url}`,
+            options: {
+                ...options,
+                headers: options.headers,
+            }
+        })
+        throw error
     }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
-        ...defaultOptions,
-        ...options,
-        headers: {
-            ...defaultOptions.headers,
-            ...options.headers,
-        },
-    })
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    return response
 }
 
 export const updateItem = async (id: string, updates: {
@@ -84,8 +111,10 @@ export const deleteItem = async (id: string): Promise<ApiResponse<void>> => {
 
 export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<Item[]>> => {
     try {
+        console.log('Fetching items with status:', status)
         const response = await fetchWithCsrf(`/api/items?status=${status}`)
         const data = await response.json()
+        console.log('Received items data:', data)
 
         // Map backend fields to frontend interface
         const itemsWithDuration = data.map((item: any) => ({
@@ -95,9 +124,14 @@ export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<It
         }))
 
         return { data: itemsWithDuration }
-    } catch (error) {
-        console.error('Error fetching items:', error)
-        return { error: 'Failed to fetch items' }
+    } catch (error: any) {
+        console.error('Error fetching items:', {
+            error,
+            message: error.message,
+            stack: error.stack,
+            response: error.response
+        })
+        return { error: error.message || 'Failed to fetch items' }
     }
 }
 
