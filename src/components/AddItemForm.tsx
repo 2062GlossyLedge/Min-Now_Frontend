@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
+import { createItem } from '@/utils/api'
 
 interface AddItemFormProps {
     onClose: () => void
@@ -18,7 +19,6 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
     const [pictureEmoji, setPictureEmoji] = useState('')
     const [itemType, setItemType] = useState('Clothing')
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [csrfToken, setCsrfToken] = useState('')
     const [receivedDate, setReceivedDate] = useState<Date | undefined>(undefined)
 
     const itemTypes = [
@@ -28,27 +28,6 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
         'Vehicle',
         'Other'
     ]
-
-    useEffect(() => {
-        // Fetch CSRF token from backend endpoint
-        const fetchCsrfToken = async () => {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
-                    credentials: 'include',
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setCsrfToken(data.token)
-                } else {
-                    console.error('Failed to fetch CSRF token')
-                }
-            } catch (error) {
-                console.error('Error fetching CSRF token:', error)
-            }
-        }
-
-        fetchCsrfToken()
-    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -70,33 +49,22 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
             console.log('Adjusted local date:', localDate)
             console.log('ISO string being sent:', localDate.toISOString())
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/items`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'accept': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    name,
-                    picture_url: pictureEmoji,
-                    item_type: itemType,
-                    status: 'Keep',
-                    item_received_date: localDate.toISOString(),
-                    last_used: localDate.toISOString() // Set last_used to same date
-                }),
+            const { data, error } = await createItem({
+                name,
+                picture_url: pictureEmoji,
+                item_type: itemType,
+                status: 'Keep',
+                item_received_date: localDate.toISOString(),
+                last_used: localDate.toISOString() // Set last_used to same date
             })
 
-            if (response.ok) {
-                const responseData = await response.json()
-                console.log('Backend response:', responseData)
-                router.refresh()
-                onClose()
-            } else {
-                const errorData = await response.json()
-                throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || 'Unknown error'}`)
+            if (error) {
+                throw new Error(error)
             }
+
+            console.log('Backend response:', data)
+            router.refresh()
+            onClose()
         } catch (error) {
             console.error('Error adding item:', error)
         } finally {

@@ -17,6 +17,15 @@ interface CheckupCreate {
     checkup_type: string;
 }
 
+interface ItemCreate {
+    name: string;
+    picture_url: string;
+    item_type: string;
+    status: string;
+    item_received_date: string;
+    last_used: string;
+}
+
 // utility csrf fetching for put, post, delete reqs
 export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
     // First, ensure we have a CSRF token
@@ -27,14 +36,14 @@ export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
         if (!csrfResponse.ok) {
             throw new Error('Failed to get CSRF token')
         }
-        const { token } = await csrfResponse.json()
-        console.log('CSRF Token:', token)
+        const csrf_token = await csrfResponse.json()
+        console.log('CSRF Token:', csrf_token.token)
 
         const defaultOptions: RequestInit = {
             headers: {
                 'Content-Type': 'application/json',
                 'accept': 'application/json',
-                'X-CSRFToken': token,
+                'X-CSRFToken': csrf_token.token,
             },
             credentials: 'include',
         }
@@ -173,5 +182,19 @@ export const completeCheckup = async (checkupId: number): Promise<ApiResponse<Ch
     } catch (error) {
         console.error('Error completing checkup:', error)
         return { error: 'Failed to complete checkup' }
+    }
+}
+
+export const createItem = async (itemData: ItemCreate): Promise<ApiResponse<Item>> => {
+    try {
+        const response = await fetchWithCsrf('/api/items', {
+            method: 'POST',
+            body: JSON.stringify(itemData),
+        })
+        const data = await response.json()
+        return { data }
+    } catch (error) {
+        console.error('Error creating item:', error)
+        return { error: 'Failed to create item' }
     }
 }
