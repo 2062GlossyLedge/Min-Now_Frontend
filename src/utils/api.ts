@@ -28,17 +28,19 @@ export const fetchWithCsrf = async (url: string, options: RequestInit = {}) => {
             throw new Error('Failed to get CSRF token')
         }
         const { token } = await csrfResponse.json()
-        const csrfToken = token.token
         console.log('CSRF Token:', token)
 
         const defaultOptions: RequestInit = {
             headers: {
                 'Content-Type': 'application/json',
                 'accept': 'application/json',
-                'X-CSRFToken': csrfToken,
+                'X-CSRFToken': token,
             },
             credentials: 'include',
         }
+
+        console.log('Making request to:', `${process.env.NEXT_PUBLIC_API_URL}${url}`)
+        console.log('With headers:', defaultOptions.headers)
 
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${url}`, {
             ...defaultOptions,
