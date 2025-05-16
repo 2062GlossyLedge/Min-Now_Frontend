@@ -58,6 +58,8 @@ export default function Navigation() {
                         <SignedIn>
                             <UserButton />
                         </SignedIn>
+                        {/* vertical line to demarcate buttona dn logo */}
+                        <div className="h-8 w-px bg-gray-300 dark:bg-gray-700" />
                         <div className="relative w-8 h-8  overflow-hidden ">
                             <Image
                                 src="/Min-NowDarkLogoCropped.jpg"
