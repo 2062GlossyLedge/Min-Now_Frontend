@@ -39,3 +39,5 @@ My App.swiftpm/
 backend-snippet/
 
 outsideFiles/*
+# clerk configuration (can include secrets)
+/.clerk/

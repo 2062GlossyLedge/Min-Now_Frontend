@@ -3,6 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
+import {
+    SignInButton,
+    SignUpButton,
+    SignedIn,
+    SignedOut,
+    UserButton,
+} from '@clerk/nextjs'
 
 export default function Navigation() {
     const pathname = usePathname()
@@ -44,6 +51,13 @@ export default function Navigation() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </Link>
+                        <SignedOut>
+                            <SignInButton />
+                            <SignUpButton />
+                        </SignedOut>
+                        <SignedIn>
+                            <UserButton />
+                        </SignedIn>
                         <div className="relative w-8 h-8  overflow-hidden ">
                             <Image
                                 src="/Min-NowDarkLogoCropped.jpg"
