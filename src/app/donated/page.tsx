@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import ItemCard from '../../components/ItemCard'
+import AuthMessage from '../../components/AuthMessage'
 import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
 import { Item } from '@/types/item'
+import { SignedIn } from '@clerk/nextjs'
 
 export default function DonatedView() {
     const [items, setItems] = useState<Item[]>([])
@@ -104,27 +106,32 @@ export default function DonatedView() {
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <h1 className="text-2xl font-bold mb-6">Donated Items</h1>
-            {items.length === 0 ? (
-                <p className="text-gray-500">No donated items at the moment.</p>
-            ) : (
-                <div className="space-y-4">
-                    {items.map((item) => (
-                        <ItemCard
-                            key={item.id}
-                            id={item.id}
-                            name={item.name}
-                            pictureUrl={item.pictureUrl}
-                            itemType={item.itemType}
-                            status={item.status}
-                            ownershipDuration={item.ownershipDuration}
-                            lastUsedDuration={item.lastUsedDuration}
-                            onStatusChange={handleStatusChange}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                        />
-                    ))}
-                </div>
-            )}
+
+            <AuthMessage />
+
+            <SignedIn>
+                {items.length === 0 ? (
+                    <p className="text-gray-500">No donated items at the moment.</p>
+                ) : (
+                    <div className="space-y-4">
+                        {items.map((item) => (
+                            <ItemCard
+                                key={item.id}
+                                id={item.id}
+                                name={item.name}
+                                pictureUrl={item.pictureUrl}
+                                itemType={item.itemType}
+                                status={item.status}
+                                ownershipDuration={item.ownershipDuration}
+                                lastUsedDuration={item.lastUsedDuration}
+                                onStatusChange={handleStatusChange}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
+                )}
+            </SignedIn>
         </div>
     )
 } 

@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react'
 import ItemCard from '../../components/ItemCard'
 import FilterBar from '../../components/FilterBar'
 import CheckupManager from '../../components/CheckupManager'
+import AuthMessage from '../../components/AuthMessage'
 import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
 import { Item } from '@/types/item'
 import { useCheckupStatus } from '@/hooks/useCheckupStatus'
+import { SignedIn } from '@clerk/nextjs'
 
 export default function GiveView() {
     const [items, setItems] = useState<Item[]>([])
@@ -121,59 +123,65 @@ export default function GiveView() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Items to Give Away</h1>
-                <div className="flex space-x-2">
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                    </button>
-                    <button
-                        onClick={() => setShowCheckupManager(true)}
-                        className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors relative"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {isCheckupDue && (
-                            <div className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full"></div>
-                        )}
-                    </button>
-                </div>
+                <SignedIn>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={() => setShowCheckupManager(true)}
+                            className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors relative"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {isCheckupDue && (
+                                <div className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full"></div>
+                            )}
+                        </button>
+                    </div>
+                </SignedIn>
             </div>
 
-            <FilterBar onFilterChange={handleFilterChange} showFilters={showFilters} />
+            <AuthMessage />
 
-            {filteredItems.length === 0 ? (
-                <p className="text-gray-500">No items to give away at the moment.</p>
-            ) : (
-                <div className="space-y-4">
-                    {filteredItems.map((item) => (
-                        <ItemCard
-                            key={item.id}
-                            id={item.id}
-                            name={item.name}
-                            pictureUrl={item.pictureUrl}
-                            itemType={item.itemType}
-                            status={item.status}
-                            ownershipDuration={item.ownershipDuration}
-                            lastUsedDuration={item.lastUsedDuration}
-                            onStatusChange={handleStatusChange}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                        />
-                    ))}
-                </div>
-            )}
+            <SignedIn>
+                <FilterBar onFilterChange={handleFilterChange} showFilters={showFilters} />
 
-            {showCheckupManager && (
-                <CheckupManager
-                    checkupType="Give"
-                    onClose={() => setShowCheckupManager(false)}
-                />
-            )}
+                {filteredItems.length === 0 ? (
+                    <p className="text-gray-500">No items to give away at the moment.</p>
+                ) : (
+                    <div className="space-y-4">
+                        {filteredItems.map((item) => (
+                            <ItemCard
+                                key={item.id}
+                                id={item.id}
+                                name={item.name}
+                                pictureUrl={item.pictureUrl}
+                                itemType={item.itemType}
+                                status={item.status}
+                                ownershipDuration={item.ownershipDuration}
+                                lastUsedDuration={item.lastUsedDuration}
+                                onStatusChange={handleStatusChange}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {showCheckupManager && (
+                    <CheckupManager
+                        checkupType="Give"
+                        onClose={() => setShowCheckupManager(false)}
+                    />
+                )}
+            </SignedIn>
         </div>
     )
 } 
