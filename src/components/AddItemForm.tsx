@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import { CalendarIcon } from 'lucide-react'
 import { createItem } from '@/utils/api'
+import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch'
 
 interface AddItemFormProps {
     onClose: () => void
@@ -20,6 +21,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
     const [itemType, setItemType] = useState('Clothing')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [receivedDate, setReceivedDate] = useState<Date | undefined>(undefined)
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     const itemTypes = [
         'Clothing',
@@ -56,7 +58,7 @@ export default function AddItemForm({ onClose }: AddItemFormProps) {
                 status: 'Keep',
                 item_received_date: localDate.toISOString(),
                 last_used: localDate.toISOString() // Set last_used to same date
-            })
+            }, authenticatedFetch)
 
             if (error) {
                 throw new Error(error)

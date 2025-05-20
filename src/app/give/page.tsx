@@ -9,38 +9,21 @@ import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
 import { Item } from '@/types/item'
 import { useCheckupStatus } from '@/hooks/useCheckupStatus'
 import { SignedIn } from '@clerk/nextjs'
+import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch'
 
 export default function GiveView() {
     const [items, setItems] = useState<Item[]>([])
     const [loading, setLoading] = useState(true)
     const [showCheckupManager, setShowCheckupManager] = useState(false)
     const [selectedType, setSelectedType] = useState<string | null>(null)
-    const [csrfToken, setCsrfToken] = useState('')
     const [showFilters, setShowFilters] = useState(false)
     const isCheckupDue = useCheckupStatus('give')
-
-    useEffect(() => {
-        const fetchCsrfToken = async () => {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
-                    credentials: 'include',
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setCsrfToken(data.token)
-                }
-            } catch (error) {
-                console.error('Error fetching CSRF token:', error)
-            }
-        }
-
-        fetchCsrfToken()
-    }, [])
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const { data, error } = await fetchItemsByStatus('Give')
+                const { data, error } = await fetchItemsByStatus('Give', authenticatedFetch)
                 if (error) {
                     console.error(error)
                     setItems([])
@@ -55,10 +38,10 @@ export default function GiveView() {
         }
 
         fetchItems()
-    }, [])
+    }, [authenticatedFetch])
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-        const { data: updatedItem, error } = await updateItem(id, { status: newStatus })
+        const { data: updatedItem, error } = await updateItem(id, { status: newStatus }, authenticatedFetch)
 
         if (error) {
             console.error(error)
@@ -78,7 +61,7 @@ export default function GiveView() {
     }
 
     const handleEdit = async (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }) => {
-        const { data: updatedItem, error } = await updateItem(id, updates)
+        const { data: updatedItem, error } = await updateItem(id, updates, authenticatedFetch)
 
         if (error) {
             console.error(error)
@@ -96,17 +79,16 @@ export default function GiveView() {
     }
 
     const handleDelete = async (id: string) => {
-        const { error } = await deleteItem(id)
+        const { error } = await deleteItem(id, authenticatedFetch)
 
         if (error) {
             console.error(error)
             return
         }
 
-        setItems(prevItems => prevItems.filter(item => item.id !== id))
+        setItems(items.filter((item) => item.id !== id))
     }
 
-    // Ensure exact type matching with backend ItemType choices
     const filteredItems = selectedType
         ? items.filter((item) => item.itemType === selectedType)
         : items
@@ -120,11 +102,19 @@ export default function GiveView() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Items to Give Away</h1>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Give Items</h1>
                 <SignedIn>
-                    <div className="flex space-x-2">
+                    <div className="flex items-center space-x-4">
+                        {isCheckupDue && (
+                            <button
+                                onClick={() => setShowCheckupManager(true)}
+                                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700"
+                            >
+                                Start Checkup
+                            </button>
+                        )}
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
@@ -132,17 +122,6 @@ export default function GiveView() {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                             </svg>
-                        </button>
-                        <button
-                            onClick={() => setShowCheckupManager(true)}
-                            className="p-2 text-gray-900 dark:text-white hover:text-teal-500 dark:hover:text-teal-400 transition-colors relative"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {isCheckupDue && (
-                                <div className="absolute top-1.5 right-1.5 w-3 h-3 bg-red-500 rounded-full"></div>
-                            )}
                         </button>
                     </div>
                 </SignedIn>
@@ -154,7 +133,7 @@ export default function GiveView() {
                 <FilterBar onFilterChange={handleFilterChange} showFilters={showFilters} />
 
                 {filteredItems.length === 0 ? (
-                    <p className="text-gray-500">No items to give away at the moment.</p>
+                    <p className="text-gray-500">No items to give at the moment.</p>
                 ) : (
                     <div className="space-y-4">
                         {filteredItems.map((item) => (

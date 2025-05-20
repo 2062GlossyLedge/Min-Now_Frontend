@@ -10,6 +10,7 @@ import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
 import { Item } from '@/types/item'
 import { useCheckupStatus } from '@/hooks/useCheckupStatus'
 import { SignedIn } from '@clerk/nextjs'
+import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch'
 
 export default function KeepView() {
     const [items, setItems] = useState<Item[]>([])
@@ -20,6 +21,7 @@ export default function KeepView() {
     const [csrfToken, setCsrfToken] = useState('')
     const isCheckupDue = useCheckupStatus('keep')
     const [showFilters, setShowFilters] = useState(false)
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     useEffect(() => {
         const fetchCsrfToken = async () => {
@@ -42,37 +44,35 @@ export default function KeepView() {
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const { data, error } = await fetchItemsByStatus('Keep')
+                const { data, error } = await fetchItemsByStatus('Keep', authenticatedFetch)
                 if (error) {
                     console.error(error)
                     setItems([])
                 } else {
-                    setItems(Array.isArray(data) ? data : [])
+                    setItems(data || [])
                 }
             } catch (error) {
                 console.error('Error fetching items:', error)
-                setItems([])
             } finally {
                 setLoading(false)
             }
         }
 
         fetchItems()
-    }, [])
+    }, [authenticatedFetch])
 
     const handleStatusChange = async (id: string, newStatus: string) => {
-        const { data: updatedItem, error } = await updateItem(id, { status: newStatus })
-
-        if (error) {
-            console.error(error)
-            return
-        }
-
-        if (updatedItem) {
-            // Remove the item from the current view if its status has changed
-            if (updatedItem.status !== 'Keep') {
-                setItems(items.filter((item) => item.id !== id))
+        try {
+            const { error } = await updateItem(id, { status: newStatus }, authenticatedFetch)
+            if (error) {
+                console.error('Error updating item status:', error)
+                return
             }
+            setItems(items.map(item =>
+                item.id === id ? { ...item, status: newStatus } : item
+            ))
+        } catch (error) {
+            console.error('Error updating item status:', error)
         }
     }
 
@@ -81,32 +81,35 @@ export default function KeepView() {
     }
 
     const handleEdit = async (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }) => {
-        const { data: updatedItem, error } = await updateItem(id, updates)
-
-        if (error) {
-            console.error(error)
-            return
-        }
-
-        if (updatedItem) {
-            // Update the item in place while maintaining the list order
-            setItems(prevItems =>
-                prevItems.map(item =>
-                    item.id === id ? { ...item, ...updatedItem } : item
+        try {
+            const { data: updatedItem, error } = await updateItem(id, updates, authenticatedFetch)
+            if (error) {
+                console.error('Error updating item:', error)
+                return
+            }
+            if (updatedItem) {
+                setItems(prevItems =>
+                    prevItems.map(item =>
+                        item.id === id ? { ...item, ...updatedItem } : item
+                    )
                 )
-            )
+            }
+        } catch (error) {
+            console.error('Error updating item:', error)
         }
     }
 
     const handleDelete = async (id: string) => {
-        const { error } = await deleteItem(id)
-
-        if (error) {
-            console.error(error)
-            return
+        try {
+            const { error } = await deleteItem(id, authenticatedFetch)
+            if (error) {
+                console.error('Error deleting item:', error)
+                return
+            }
+            setItems(items.filter(item => item.id !== id))
+        } catch (error) {
+            console.error('Error deleting item:', error)
         }
-
-        setItems(prevItems => prevItems.filter(item => item.id !== id))
     }
 
     // Filter items based on selected type

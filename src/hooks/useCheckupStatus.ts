@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { fetchCheckup } from '@/utils/api'
+import { useAuthenticatedFetch } from './useAuthenticatedFetch'
 
 export const useCheckupStatus = (type: 'keep' | 'give') => {
     const [isCheckupDue, setIsCheckupDue] = useState(false)
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     useEffect(() => {
         const checkCheckupStatus = async () => {
             try {
-                const { data, error } = await fetchCheckup(type)
+                const { data, error } = await fetchCheckup(type, authenticatedFetch)
                 console.log(`Checkup status for ${type}:`, data)
                 if (data && Array.isArray(data) && data.length > 0) {
                     // Get the most recent checkup
@@ -19,7 +21,7 @@ export const useCheckupStatus = (type: 'keep' | 'give') => {
             }
         }
         checkCheckupStatus()
-    }, [type])
+    }, [type, authenticatedFetch])
 
     return isCheckupDue
 } 

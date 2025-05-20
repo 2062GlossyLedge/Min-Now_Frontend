@@ -6,34 +6,17 @@ import AuthMessage from '../../components/AuthMessage'
 import { updateItem, deleteItem, fetchItemsByStatus } from '@/utils/api'
 import { Item } from '@/types/item'
 import { SignedIn } from '@clerk/nextjs'
+import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch'
 
 export default function DonatedView() {
     const [items, setItems] = useState<Item[]>([])
     const [loading, setLoading] = useState(true)
-    const [csrfToken, setCsrfToken] = useState('')
-
-    useEffect(() => {
-        const fetchCsrfToken = async () => {
-            try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/csrf-token`, {
-                    credentials: 'include',
-                })
-                if (response.ok) {
-                    const data = await response.json()
-                    setCsrfToken(data.token)
-                }
-            } catch (error) {
-                console.error('Error fetching CSRF token:', error)
-            }
-        }
-
-        fetchCsrfToken()
-    }, [])
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const { data, error } = await fetchItemsByStatus('Donate')
+                const { data, error } = await fetchItemsByStatus('Donate', authenticatedFetch)
                 if (error) {
                     console.error(error)
                     setItems([])
@@ -48,10 +31,26 @@ export default function DonatedView() {
         }
 
         fetchItems()
-    }, [])
+    }, [authenticatedFetch])
+
+    const handleStatusChange = async (id: string, newStatus: string) => {
+        const { data: updatedItem, error } = await updateItem(id, { status: newStatus }, authenticatedFetch)
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        if (updatedItem) {
+            // Remove the item from the current view if its status has changed
+            if (updatedItem.status !== 'Donate') {
+                setItems(items.filter((item) => item.id !== id))
+            }
+        }
+    }
 
     const handleEdit = async (id: string, updates: { name?: string, ownershipDate?: Date, lastUsedDate?: Date }) => {
-        const { data: updatedItem, error } = await updateItem(id, updates)
+        const { data: updatedItem, error } = await updateItem(id, updates, authenticatedFetch)
 
         if (error) {
             console.error(error)
@@ -69,30 +68,14 @@ export default function DonatedView() {
     }
 
     const handleDelete = async (id: string) => {
-        const { error } = await deleteItem(id)
+        const { error } = await deleteItem(id, authenticatedFetch)
 
         if (error) {
             console.error(error)
             return
         }
 
-        setItems(prevItems => prevItems.filter(item => item.id !== id))
-    }
-
-    const handleStatusChange = async (id: string, newStatus: string) => {
-        const { data: updatedItem, error } = await updateItem(id, { status: newStatus })
-
-        if (error) {
-            console.error(error)
-            return
-        }
-
-        if (updatedItem) {
-            // Remove the item from the current view if its status has changed
-            if (updatedItem.status !== 'Donate') {
-                setItems(items.filter((item) => item.id !== id))
-            }
-        }
+        setItems(items.filter((item) => item.id !== id))
     }
 
     if (loading) {
@@ -104,8 +87,10 @@ export default function DonatedView() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-2xl font-bold mb-6">Donated Items</h1>
+        <div className="container mx-auto px-4 py-8">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Donated Items</h1>
+            </div>
 
             <AuthMessage />
 

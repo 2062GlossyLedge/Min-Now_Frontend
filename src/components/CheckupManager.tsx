@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Item } from '@/types/item'
 import { CheckCircle2 } from 'lucide-react'
-import { fetchWithCsrf, updateItem, fetchCheckup, createCheckup, completeCheckup } from '@/utils/api'
+import { updateItem, fetchCheckup, createCheckup, completeCheckup } from '@/utils/api'
+import { useAuthenticatedFetch } from '@/hooks/useAuthenticatedFetch'
 
 interface CheckupManagerProps {
     checkupType: 'Keep' | 'Give'
@@ -20,11 +21,12 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
     const [showConfirmation, setShowConfirmation] = useState(false)
     const [changedItems, setChangedItems] = useState<Set<string>>(new Set())
     const [lastCheckupDate, setLastCheckupDate] = useState<Date | null>(null)
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     useEffect(() => {
         const fetchCheckupInfo = async () => {
             try {
-                const { data, error } = await fetchCheckup(checkupType.toLowerCase())
+                const { data, error } = await fetchCheckup(checkupType.toLowerCase(), authenticatedFetch)
                 if (data) {
                     setLastCheckupDate(new Date(data.last_checkup_date))
                 }
@@ -33,12 +35,12 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
             }
         }
         fetchCheckupInfo()
-    }, [checkupType])
+    }, [checkupType, authenticatedFetch])
 
     useEffect(() => {
         const fetchItems = async () => {
             try {
-                const response = await fetchWithCsrf(`/api/items?status=${checkupType}`)
+                const response = await authenticatedFetch(`/api/items?status=${checkupType}`)
                 const data = await response.json()
                 setItems(data)
             } catch (error) {
@@ -48,7 +50,7 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
             }
         }
         fetchItems()
-    }, [checkupType])
+    }, [checkupType, authenticatedFetch])
 
     const handleStatusChange = async (itemId: string, newStatus: 'used' | 'not_used' | 'donate') => {
         try {
@@ -69,7 +71,7 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
             }
 
             const targetStatus = (statusMap[checkupType] as Record<typeof newStatus, string>)[newStatus]
-            const { data: updatedItem, error } = await updateItem(itemId, { status: targetStatus })
+            const { data: updatedItem, error } = await updateItem(itemId, { status: targetStatus }, authenticatedFetch)
 
             if (error) {
                 console.error('Error updating item status:', error)
@@ -89,24 +91,24 @@ export default function CheckupManager({ checkupType, onClose }: CheckupManagerP
         setIsSubmitting(true)
         try {
             // First, try to get existing checkup
-            const { data: existingCheckup } = await fetchCheckup(checkupType.toLowerCase())
+            const { data: existingCheckup } = await fetchCheckup(checkupType.toLowerCase(), authenticatedFetch)
 
             if (existingCheckup && Array.isArray(existingCheckup) && existingCheckup.length > 0) {
                 // If checkup exists, complete it
-                await completeCheckup(existingCheckup[0].id)
+                await completeCheckup(existingCheckup[0].id, authenticatedFetch)
             } else {
                 // If no checkup exists, create and complete a new one
                 const { data: newCheckup, error } = await createCheckup({
                     checkup_type: checkupType.toLowerCase(),
                     interval_months: interval
-                })
+                }, authenticatedFetch)
 
                 if (error) {
                     throw new Error(error)
                 }
 
                 if (newCheckup) {
-                    await completeCheckup(newCheckup.id)
+                    await completeCheckup(newCheckup.id, authenticatedFetch)
                 }
             }
 

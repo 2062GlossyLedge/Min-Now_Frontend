@@ -90,9 +90,9 @@ export const updateItem = async (id: string, updates: {
     ownershipDate?: Date,
     lastUsedDate?: Date,
     status?: string
-}): Promise<ApiResponse<Item>> => {
+}, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<Item>> => {
     try {
-        const response = await fetchWithCsrf(`/api/items/${id}`, {
+        const response = await fetchFn(`/api/items/${id}`, {
             method: 'PUT',
             body: JSON.stringify({
                 name: updates.name,
@@ -109,9 +109,9 @@ export const updateItem = async (id: string, updates: {
     }
 }
 
-export const deleteItem = async (id: string): Promise<ApiResponse<void>> => {
+export const deleteItem = async (id: string, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<void>> => {
     try {
-        await fetchWithCsrf(`/api/items/${id}`, {
+        await fetchFn(`/api/items/${id}`, {
             method: 'DELETE',
         })
         return {}
@@ -121,10 +121,10 @@ export const deleteItem = async (id: string): Promise<ApiResponse<void>> => {
     }
 }
 
-export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<Item[]>> => {
+export const fetchItemsByStatus = async (status: string, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<Item[]>> => {
     try {
         console.log('Fetching items with status:', status)
-        const response = await fetchWithCsrf(`/api/items?status=${status}`)
+        const response = await fetchFn(`/api/items?status=${status}`)
         const data = await response.json()
         console.log('Received items data:', data)
 
@@ -147,9 +147,9 @@ export const fetchItemsByStatus = async (status: string): Promise<ApiResponse<It
     }
 }
 
-export const fetchCheckup = async (type: string): Promise<ApiResponse<Checkup>> => {
+export const fetchCheckup = async (type: string, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<Checkup>> => {
     try {
-        const response = await fetchWithCsrf(`/api/checkups?type=${type.toLowerCase()}`)
+        const response = await fetchFn(`/api/checkups?type=${type.toLowerCase()}`)
         const data = await response.json()
         return { data }
     } catch (error) {
@@ -158,9 +158,9 @@ export const fetchCheckup = async (type: string): Promise<ApiResponse<Checkup>> 
     }
 }
 
-export const createCheckup = async (checkupData: CheckupCreate): Promise<ApiResponse<Checkup>> => {
+export const createCheckup = async (checkupData: CheckupCreate, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<Checkup>> => {
     try {
-        const response = await fetchWithCsrf('/api/checkups', {
+        const response = await fetchFn('/api/checkups', {
             method: 'POST',
             body: JSON.stringify(checkupData),
         })
@@ -172,9 +172,9 @@ export const createCheckup = async (checkupData: CheckupCreate): Promise<ApiResp
     }
 }
 
-export const completeCheckup = async (checkupId: number): Promise<ApiResponse<Checkup>> => {
+export const completeCheckup = async (checkupId: number, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<Checkup>> => {
     try {
-        const response = await fetchWithCsrf(`/api/checkups/${checkupId}/complete`, {
+        const response = await fetchFn(`/api/checkups/${checkupId}/complete`, {
             method: 'POST',
         })
         const data = await response.json()
@@ -185,9 +185,9 @@ export const completeCheckup = async (checkupId: number): Promise<ApiResponse<Ch
     }
 }
 
-export const createItem = async (itemData: ItemCreate): Promise<ApiResponse<Item>> => {
+export const createItem = async (itemData: ItemCreate, fetchFn: typeof fetchWithCsrf): Promise<ApiResponse<Item>> => {
     try {
-        const response = await fetchWithCsrf('/api/items', {
+        const response = await fetchFn('/api/items', {
             method: 'POST',
             body: JSON.stringify(itemData),
         })
